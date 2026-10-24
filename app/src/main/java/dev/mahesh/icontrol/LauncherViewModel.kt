@@ -72,6 +72,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         refresh()
     }
 
+    private val _homePresses = MutableStateFlow(0)
+
+    /** Counts Home presses, so the screen can close any open dialog and show the landing page again. */
+    val homePresses: StateFlow<Int> = _homePresses
+
+    fun onHomePressed() {
+        _homePresses.value++
+    }
+
     fun refresh() {
         viewModelScope.launch {
             val (apps, inputList) = withContext(Dispatchers.Default) {

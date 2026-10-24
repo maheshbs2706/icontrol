@@ -79,6 +79,17 @@ fun HomeScreen(viewModel: LauncherViewModel) {
         if (state.loaded) runCatching { firstFocus.requestFocus() }
     }
 
+    // Home closes every dialog (the mirror guide is left open behind the receiver app, for one).
+    val homePresses by viewModel.homePresses.collectAsStateWithLifecycle()
+    LaunchedEffect(homePresses) {
+        if (homePresses > 0) {
+            menuApp = null
+            showPicker = false
+            showAllApps = false
+            showMirror = false
+        }
+    }
+
     val launch: (Intent) -> Unit = { intent -> context.launchSafely(intent) }
     val onFocused: (String) -> Unit = { focusedLabel = it }
     val hasInputs = state.inputs.isNotEmpty()

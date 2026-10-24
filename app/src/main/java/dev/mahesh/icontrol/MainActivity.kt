@@ -1,5 +1,6 @@
 package dev.mahesh.icontrol
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,12 @@ class MainActivity : ComponentActivity() {
                 HomeScreen(viewModel)
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Home arrives here (singleTask): go back to the landing page, not whatever dialog was left open.
+        if (intent.hasCategory(Intent.CATEGORY_HOME)) viewModel.onHomePressed()
     }
 
     override fun onResume() {
