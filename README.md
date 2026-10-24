@@ -103,3 +103,11 @@ app/src/main/java/dev/mahesh/icontrol/
   usb/                                    USB browser (files, photos, videos)
 docs/screenshots/                         images used in this README
 ```
+
+## License
+
+iControl is released under the [MIT License](LICENSE).
+
+It does not include or modify any AirPlay receiver code. The AirPlay receiver (AirPlayMirror Lite by NeoYantra) is a separate app that you install yourself, and it has its own terms. App names and logos shown in screenshots (Netflix, JioHotstar, Zee5, Prime Video and others) belong to their owners.
+
+Libraries used: AndroidX, Jetpack Compose, Compose for TV, Media3 and Coil, all under the Apache License 2.0.
