@@ -4,6 +4,12 @@ A custom Android TV home launcher built with Kotlin and Compose for TV. It has a
 
 Built for a OnePlus TV (Android 11, 1080p), but it should work on any Android TV device.
 
+## Screenshots
+
+| Favorite apps focused (tile grows 1.3x) | System row focused |
+| --- | --- |
+| ![Home screen](docs/screenshots/home.png) | ![System row](docs/screenshots/system-row.png) |
+
 ## Features
 
 - Home screen with big, focus-friendly app tiles
