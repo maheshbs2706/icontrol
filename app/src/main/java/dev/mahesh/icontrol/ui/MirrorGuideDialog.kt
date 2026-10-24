@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
@@ -22,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.PhoneIphone
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -37,6 +39,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -196,7 +201,9 @@ private fun AndroidGuide(tvName: String, wifiName: String?, onBack: () -> Unit, 
 @Composable
 private fun IPhoneGuide(wifiName: String?, onBack: () -> Unit, firstFocus: FocusRequester) {
     val context = LocalContext.current
-    val receiver = remember { airPlayReceiverIntent(context) }
+    // Looked up again each time we come back, so the button flips once the user has installed the receiver.
+    var receiver by remember { mutableStateOf(airPlayReceiverIntent(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { receiver = airPlayReceiverIntent(context) }
     GuideTitle("Mirror your iPhone", "Uses the AirPlay receiver app on this TV")
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -213,32 +220,55 @@ private fun IPhoneGuide(wifiName: String?, onBack: () -> Unit, firstFocus: Focus
         Step(3, "On your iPhone, swipe down for Control Center and tap Screen Mirroring.")
         Step(4, "Choose the TV from the list. Your iPhone's screen appears here.")
     }
-    if (receiver == null) {
+    val launch = receiver
+    if (launch == null) {
         Text(
-            text = "No AirPlay receiver app is installed on this TV yet.",
+            text = "To mirror an iPhone, this TV needs a free AirPlay receiver app. Install one, then come back here.",
             style = MaterialTheme.typography.titleSmall,
             color = Palette.TextSecondary,
-            modifier = Modifier.padding(top = 22.dp),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(top = 22.dp)
+                .widthIn(max = 620.dp),
         )
     }
     Row(horizontalArrangement = Arrangement.spacedBy(32.dp), modifier = Modifier.padding(top = 28.dp)) {
-        if (receiver != null) {
+        if (launch != null) {
             ActionButton(
                 text = "Open AirPlay receiver",
                 icon = Icons.Rounded.PlayArrow,
-                onClick = { runCatching { context.startActivity(receiver) } },
+                onClick = { runCatching { context.startActivity(launch) } },
                 modifier = Modifier.focusRequester(firstFocus),
             )
-            ActionButton(text = "Back", icon = Icons.Rounded.Close, onClick = onBack)
         } else {
             ActionButton(
-                text = "Back",
-                icon = Icons.Rounded.Close,
-                onClick = onBack,
+                text = "Get it on Google Play",
+                icon = Icons.Rounded.Download,
+                onClick = { openReceiverInStore(context) },
                 modifier = Modifier.focusRequester(firstFocus),
             )
         }
+        ActionButton(text = "Back", icon = Icons.Rounded.Close, onClick = onBack)
     }
+    if (launch == null) {
+        Text(
+            text = "No Play Store? Search for \"AirPlayMirror Lite\" in your TV's app store.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Palette.TextSecondary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .widthIn(max = 620.dp),
+        )
+    }
+}
+
+/** Opens the receiver's Play Store page; the web page if the Store app can't take the market link. */
+private fun openReceiverInStore(context: Context) {
+    val id = AirPlayReceivers.first()
+    fun view(uri: String) = Intent(Intent.ACTION_VIEW, Uri.parse(uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    runCatching { context.startActivity(view("market://details?id=$id")) }
+        .recoverCatching { context.startActivity(view("https://play.google.com/store/apps/details?id=$id")) }
 }
 
 /**
