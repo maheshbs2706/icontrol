@@ -10,6 +10,10 @@ Built for a OnePlus TV (Android 11, 1080p), but it should work on any Android TV
 | --- | --- |
 | ![Home screen](docs/screenshots/home.png) | ![System row](docs/screenshots/system-row.png) |
 
+| All apps (rotating ring) | USB drive menu |
+| --- | --- |
+| ![All apps](docs/screenshots/all-apps.png) | ![USB menu](docs/screenshots/usb-menu.png) |
+
 ## Features
 
 - Home screen with big, focus-friendly app tiles
