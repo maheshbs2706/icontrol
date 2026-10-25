@@ -260,8 +260,6 @@ fun ShortcutTile(
     modifier: Modifier = Modifier,
     width: Dp = 140.dp,
 ) {
-    // A narrow tile gives its text more of the width.
-    val compact = width < 130.dp
     Surface(
         onClick = onClick,
         shape = ClickableSurfaceDefaults.shape(CardShape),
@@ -276,7 +274,7 @@ fun ShortcutTile(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = if (compact) 8.dp else 12.dp),
+                .padding(horizontal = 12.dp),
         ) {
             Icon(
                 imageVector = icon,
@@ -292,7 +290,7 @@ fun ShortcutTile(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = if (compact) 6.dp else 8.dp),
+                    .padding(start = 8.dp),
             )
         }
     }

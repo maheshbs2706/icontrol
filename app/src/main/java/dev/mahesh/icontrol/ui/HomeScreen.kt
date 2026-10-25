@@ -19,7 +19,6 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Cable
 import androidx.compose.material.icons.rounded.Cast
-import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Usb
@@ -65,7 +64,6 @@ private val SystemShortcuts = listOf(
     Shortcut("Wi-Fi", Icons.Rounded.Wifi, "wifi") { Intent(Settings.ACTION_WIFI_SETTINGS) },
     Shortcut("Sound", Icons.Rounded.VolumeUp, "sound") { Intent(Settings.ACTION_SOUND_SETTINGS) },
     Shortcut("Settings", Icons.Rounded.Settings, "settings") { Intent(Settings.ACTION_SETTINGS) },
-    Shortcut("Restart", Icons.Rounded.RestartAlt, "restart", intent = null),
 )
 
 @Composable
@@ -78,7 +76,6 @@ fun HomeScreen(viewModel: LauncherViewModel) {
     var showAllApps by remember { mutableStateOf(false) }
     var showMirror by remember { mutableStateOf(false) }
     var showManageApps by remember { mutableStateOf(false) }
-    var showRestart by remember { mutableStateOf(false) }
     val firstFocus = remember { FocusRequester() }
 
     LaunchedEffect(state.loaded) {
@@ -94,7 +91,6 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             showAllApps = false
             showMirror = false
             showManageApps = false
-            showRestart = false
         }
     }
 
@@ -186,9 +182,8 @@ fun HomeScreen(viewModel: LauncherViewModel) {
 
             item(key = "system") {
                 SectionRow("System") {
-                    // Seven narrow tiles with a tight gap so the row fits the screen (a focused tile grows ~16dp each side,
-                    // so it just overlaps its neighbours).
-                    CardRow(verticalPadding = TileFocusPadding, gap = 14.dp) {
+                    // Six narrower tiles with a tighter gap so the row fits the screen (a focused tile grows ~18dp each side).
+                    CardRow(verticalPadding = TileFocusPadding, gap = 24.dp) {
                         items(SystemShortcuts, key = { it.key }) { shortcut ->
                             ShortcutTile(
                                 label = shortcut.label,
@@ -198,12 +193,11 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                     when {
                                         intent != null -> launch(intent(context))
                                         shortcut.key == "manage-apps" -> showManageApps = true
-                                        shortcut.key == "restart" -> showRestart = true
                                         else -> showMirror = true
                                     }
                                 },
                                 onFocused = onFocused,
-                                width = 108.dp,
+                                width = 120.dp,
                             )
                         }
                     }
@@ -228,10 +222,6 @@ fun HomeScreen(viewModel: LauncherViewModel) {
 
     if (showManageApps) {
         ManageAppsDialog(repository = viewModel.repository, onDismiss = { showManageApps = false })
-    }
-
-    if (showRestart) {
-        RestartDialog(onDismiss = { showRestart = false })
     }
 
     if (showAllApps) {

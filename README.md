@@ -32,11 +32,10 @@ The USB screenshot uses synthetic test files, not a real drive. The Wi-Fi name i
 - **Inputs:** HDMI, DTH, the sound bar and other TV inputs, opened in one press.
 - **Favorite apps:** pick which apps appear on the home row. A per-app menu offers remove, app info and uninstall.
 - **All apps:** a rotating ring of every installed app.
-- **System row:** USB, Mirror, Apps, Wi-Fi, Sound, Settings and Restart.
+- **System row:** USB, Mirror, Apps, Wi-Fi, Sound and Settings.
 - **Apps manager:** every app on the TV in one list, with the actions that apply to each (see below).
 - **USB:** browse photos, videos and all files on a USB drive, with photo and video counts. Photos and videos each have a grid with Play all / Slideshow controls: **From here**, **From start**, **Random** and **Loop** (see below).
 - **Mirror:** asks Android phone, iPhone or laptop, then guides the user through mirroring (see below).
-- **Restart:** restarts the TV after a confirmation (see below).
 - **Home button:** pressing Home from any app, including the mirror receiver, closes any open dialog and shows the landing page.
 
 ## Mirror
@@ -71,17 +70,6 @@ The photo and video grids use the same layout: rows of thumbnails, with the focu
 - **Loop:** a checkbox; the list starts over after the last item. It is on by default for photos and off for videos.
 
 Opening a single photo or video still shows or plays just that one (a video repeats if Loop is on).
-
-## Restart
-
-The **Restart** tile asks "Restart the TV?" and, on confirmation, restarts it. This is useful for things a restart fixes, such as an HDMI sound bar whose ARC link has dropped.
-
-Android does not let an ordinary app restart the device: the system restart screen needs the `SHUTDOWN` permission, which only system apps get. So iControl connects to the TV's own ADB service on `127.0.0.1:5555`, the way `adb connect` does from a PC, and runs `reboot` as the shell user. This needs:
-
-- **ADB over network** (or USB debugging) switched on in Developer options.
-- A one-time **"Allow USB debugging?"** prompt on the TV the first time. Tick **Always allow**.
-
-iControl keeps its own ADB key in its private storage (`adbkey`, `adbkey.pub`), which is what the TV remembers. If the TV does not answer, the dialog says so instead of failing silently. The ADB client is the [dadb](https://github.com/mobile-dev-inc/dadb) library.
 
 ## Requirements
 
@@ -135,8 +123,8 @@ The system FallbackHome acts as a safety net if iControl fails to start.
 ```
 app/src/main/java/dev/mahesh/icontrol/
   MainActivity.kt, LauncherViewModel.kt   entry point and state
-  data/                                   app list, preferences, TV restart over ADB
-  ui/                                     home screen, dialogs (all apps, apps manager, mirror guide, restart), theme
+  data/                                   app list and preferences
+  ui/                                     home screen, dialogs (all apps, apps manager, mirror guide), theme
   usb/                                    USB browser (files, photos, videos, slideshow and playback)
 docs/screenshots/                         images used in this README
 ```
@@ -147,4 +135,4 @@ iControl is released under the [MIT License](LICENSE).
 
 It does not include or modify any AirPlay receiver code. The AirPlay receiver (AirPlayMirror Lite by NeoYantra) is a separate app that you install yourself, and it has its own terms. App names and logos shown in screenshots (Netflix, JioHotstar, Zee5, Prime Video, YouTube and others) belong to their owners.
 
-Libraries used: AndroidX, Jetpack Compose, Compose for TV, Media3, Coil and dadb, all under the Apache License 2.0.
+Libraries used: AndroidX, Jetpack Compose, Compose for TV, Media3 and Coil, all under the Apache License 2.0.

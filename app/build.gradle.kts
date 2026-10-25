@@ -61,6 +61,4 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.11.1")
     implementation("androidx.media3:media3-ui:1.11.1")
     implementation("io.coil-kt.coil3:coil-compose:3.6.3")
-    // Talks to this TV's own ADB service, which is the only way an app can restart the TV (see AdbReboot).
-    implementation("dev.mobile:dadb:1.2.10")
 }
