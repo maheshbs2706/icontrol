@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Laptop
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.PhoneIphone
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -45,13 +46,18 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import dev.mahesh.icontrol.usb.ActionButton
 import dev.mahesh.icontrol.usb.KeepScreenOn
 
 /**
- * How to mirror a phone onto this TV. The user first says which phone they have. Android uses the TV's own Google
+ * How to mirror a phone or laptop onto this TV. The user first says which device they have; a laptop uses Chrome's
+ * Cast, which talks to the same receiver as Android. Android uses the TV's own Google
  * Cast receiver (an app cannot be a receiver itself), so that path just tells the user the TV's name and where to tap.
  * An iPhone needs an AirPlay receiver app installed on the TV; this opens it and walks through the iPhone's side.
  * When mirroring starts the receiver takes the screen over, and the user lands back here when it ends.
@@ -107,13 +113,19 @@ fun MirrorGuideDialog(onDismiss: () -> Unit) {
                         onBack = { phone = null },
                         firstFocus = firstFocus,
                     )
+                    PhoneKind.Laptop -> LaptopGuide(
+                        tvName = tvName,
+                        wifiName = wifiName,
+                        onBack = { phone = null },
+                        firstFocus = firstFocus,
+                    )
                 }
             }
         }
     }
 }
 
-private enum class PhoneKind { Android, IPhone }
+private enum class PhoneKind { Android, IPhone, Laptop }
 
 /** The AirPlay receiver apps we know how to open, best first. */
 private val AirPlayReceivers = listOf("com.neoyantra.airplaymirror.airplaymirrorappdemo")
@@ -141,17 +153,46 @@ private fun GuideTitle(title: String, subtitle: String) {
     )
 }
 
+/** One of the equally sized device cards on the first screen. */
+@Composable
+private fun ChoiceCard(text: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(20.dp)),
+        colors = focusColors(),
+        border = focusBorder(),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
+        modifier = modifier.size(width = 280.dp, height = 240.dp),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = Palette.Accent, modifier = Modifier.size(88.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Palette.TextPrimary,
+                modifier = Modifier.padding(top = 18.dp),
+            )
+        }
+    }
+}
+
 @Composable
 private fun PhoneChoice(onPick: (PhoneKind) -> Unit, onClose: () -> Unit, firstFocus: FocusRequester) {
-    GuideTitle("Mirror your phone", "Which phone do you have?")
-    Row(horizontalArrangement = Arrangement.spacedBy(32.dp), modifier = Modifier.padding(top = 36.dp)) {
-        ActionButton(
+    GuideTitle("Mirror","What do you want to show on this TV?")
+    Row(horizontalArrangement = Arrangement.spacedBy(40.dp), modifier = Modifier.padding(top = 36.dp)) {
+        ChoiceCard(
             text = "Android phone",
             icon = Icons.Rounded.PhoneAndroid,
             onClick = { onPick(PhoneKind.Android) },
             modifier = Modifier.focusRequester(firstFocus),
         )
-        ActionButton(text = "iPhone", icon = Icons.Rounded.PhoneIphone, onClick = { onPick(PhoneKind.IPhone) })
+        ChoiceCard(text = "iPhone", icon = Icons.Rounded.PhoneIphone, onClick = { onPick(PhoneKind.IPhone) })
+        ChoiceCard(text = "Laptop", icon = Icons.Rounded.Laptop, onClick = { onPick(PhoneKind.Laptop) })
     }
     ActionButton(
         text = "Close",
@@ -194,6 +235,54 @@ private fun AndroidGuide(tvName: String, wifiName: String?, onBack: () -> Unit, 
         onClick = onBack,
         modifier = Modifier
             .padding(top = 28.dp)
+            .focusRequester(firstFocus),
+    )
+}
+
+/** A laptop casts through the TV's own Google Cast receiver, using Chrome, which works on Windows, Mac and Chromebook. */
+@Composable
+private fun LaptopGuide(tvName: String, wifiName: String?, onBack: () -> Unit, firstFocus: FocusRequester) {
+    GuideTitle("Mirror your laptop", "Look for this name in Chrome on your laptop")
+    Text(
+        text = tvName,
+        style = MaterialTheme.typography.displaySmall,
+        fontWeight = FontWeight.Bold,
+        color = Palette.Background,
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .background(Palette.Accent, RoundedCornerShape(28.dp))
+            .padding(horizontal = 36.dp, vertical = 10.dp),
+    )
+    Column(
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier
+            .padding(top = 28.dp)
+            .widthIn(max = 620.dp),
+    ) {
+        Step(
+            1,
+            wifiName?.let { "Connect your laptop to the Wi-Fi \"$it\", the same one this TV is on." }
+                ?: "Connect your laptop to the same Wi-Fi as this TV.",
+        )
+        Step(2, "In Chrome, click the three dots at the top right, then Save, share and cast, then Cast.")
+        Step(3, "Click Sources and choose Cast screen. To hear sound, tick Share system audio.")
+        Step(4, "Choose \"$tvName\". Your laptop's screen appears here.")
+    }
+    Text(
+        text = "An HDMI cable from the laptop to the TV also works, with no delay.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = Palette.TextSecondary,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .padding(top = 18.dp)
+            .widthIn(max = 620.dp),
+    )
+    ActionButton(
+        text = "Back",
+        icon = Icons.Rounded.Close,
+        onClick = onBack,
+        modifier = Modifier
+            .padding(top = 22.dp)
             .focusRequester(firstFocus),
     )
 }

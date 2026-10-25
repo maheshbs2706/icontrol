@@ -30,15 +30,19 @@ sealed interface UsbScreen {
     /** Videos of one folder, or of the whole drive when [folder] is null. */
     data class Videos(val folder: File?) : UsbScreen
 
-    /** [fromGrid]: [photos] is the Photos grid's own list, so the grid should return to the photo last shown. */
+    /**
+     * [fromGrid]: the grid should return to the photo last shown. [photos] may be a shuffled copy of the grid's own
+     * list, which is [source], so a photo's place in the grid is looked up there.
+     */
     data class PhotoViewer(
         val photos: List<File>,
         val index: Int,
         val slideshow: Boolean,
         val fromGrid: Boolean,
+        val source: List<File> = photos,
     ) : UsbScreen
 
-    data class VideoPlayer(val videos: List<File>) : UsbScreen
+    data class VideoPlayer(val videos: List<File>, val startIndex: Int = 0) : UsbScreen
 }
 
 /** Back stack of screens; Back pops one, and leaves the USB reader from the menu. */
@@ -60,6 +64,8 @@ fun UsbApp(viewModel: UsbViewModel, onRequestPermission: () -> Unit, onExit: () 
     val lastOpenedInFolder = remember { HashMap<String, String>() }
     // On by default, which is how the slideshow behaved before the option existed.
     var loopSlideshow by remember { mutableStateOf(true) }
+    // Off by default: videos have always stopped at the end of the list.
+    var loopVideos by remember { mutableStateOf(false) }
 
     val goBack: () -> Unit = { if (stack.size > 1) stack.removeAt(stack.lastIndex) else onExit() }
     BackHandler(onBack = goBack)
@@ -152,6 +158,10 @@ fun UsbApp(viewModel: UsbViewModel, onRequestPermission: () -> Unit, onExit: () 
                     lastPhotoIndex = start
                     stack.add(UsbScreen.PhotoViewer(photos, start, slideshow = true, fromGrid = true))
                 },
+                onRandom = {
+                    lastPhotoIndex = -1
+                    stack.add(UsbScreen.PhotoViewer(photos.shuffled(), 0, slideshow = true, fromGrid = true, source = photos))
+                },
             )
         }
 
@@ -183,13 +193,19 @@ fun UsbApp(viewModel: UsbViewModel, onRequestPermission: () -> Unit, onExit: () 
                 videos = videos,
                 scanning = state.scanning,
                 restoreIndex = lastVideoIndex,
+                loopVideos = loopVideos,
+                onLoopChange = { loopVideos = it },
                 onPlay = {
                     lastVideoIndex = it
                     stack.add(UsbScreen.VideoPlayer(listOf(videos[it])))
                 },
-                onPlayAll = {
+                onPlayAll = { start ->
+                    lastVideoIndex = start
+                    stack.add(UsbScreen.VideoPlayer(videos, start))
+                },
+                onRandom = {
                     lastVideoIndex = -1
-                    stack.add(UsbScreen.VideoPlayer(videos))
+                    stack.add(UsbScreen.VideoPlayer(videos.shuffled()))
                 },
             )
         }
@@ -199,12 +215,17 @@ fun UsbApp(viewModel: UsbViewModel, onRequestPermission: () -> Unit, onExit: () 
             startIndex = screen.index,
             startSlideshow = screen.slideshow,
             loopSlideshow = loopSlideshow,
-            onIndexChange = { if (screen.fromGrid) lastPhotoIndex = it },
+            onIndexChange = {
+                if (screen.fromGrid) {
+                    lastPhotoIndex = if (screen.photos === screen.source) it else screen.source.indexOf(screen.photos[it])
+                }
+            },
         )
 
         is UsbScreen.VideoPlayer -> VideoPlayerScreen(
             videos = screen.videos,
-            startIndex = 0,
+            startIndex = screen.startIndex,
+            loop = loopVideos,
             // The end-of-playback callback can fire after the screen is already gone; only leave if still showing.
             onFinished = { if (stack.lastOrNull() is UsbScreen.VideoPlayer) goBack() },
         )

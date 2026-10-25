@@ -20,6 +20,8 @@ import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Cable
 import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Speaker
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Usb
 import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Wifi
@@ -41,6 +43,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import dev.mahesh.icontrol.LauncherViewModel
 import dev.mahesh.icontrol.data.AppEntry
+import dev.mahesh.icontrol.data.InputEntry
+import dev.mahesh.icontrol.data.SoundbarLink
 import dev.mahesh.icontrol.usb.UsbActivity
 import java.time.LocalDate
 import java.time.LocalTime
@@ -58,10 +62,11 @@ private data class Shortcut(
 
 private val SystemShortcuts = listOf(
     Shortcut("USB", Icons.Rounded.Usb, "usb") { Intent(it, UsbActivity::class.java) },
-    Shortcut("Mirror phone", Icons.Rounded.Cast, "mirror", intent = null),
+    Shortcut("Mirror", Icons.Rounded.Cast, "mirror", intent = null),
+    Shortcut("Apps", Icons.Rounded.Tune, "manage-apps", intent = null),
     Shortcut("Wi-Fi", Icons.Rounded.Wifi, "wifi") { Intent(Settings.ACTION_WIFI_SETTINGS) },
     Shortcut("Sound", Icons.Rounded.VolumeUp, "sound") { Intent(Settings.ACTION_SOUND_SETTINGS) },
-    Shortcut("All settings", Icons.Rounded.Settings, "settings") { Intent(Settings.ACTION_SETTINGS) },
+    Shortcut("Settings", Icons.Rounded.Settings, "settings") { Intent(Settings.ACTION_SETTINGS) },
 )
 
 @Composable
@@ -73,6 +78,8 @@ fun HomeScreen(viewModel: LauncherViewModel) {
     var showPicker by remember { mutableStateOf(false) }
     var showAllApps by remember { mutableStateOf(false) }
     var showMirror by remember { mutableStateOf(false) }
+    var showManageApps by remember { mutableStateOf(false) }
+    var soundbarMenu by remember { mutableStateOf<InputEntry?>(null) }
     val firstFocus = remember { FocusRequester() }
 
     LaunchedEffect(state.loaded) {
@@ -87,6 +94,8 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             showPicker = false
             showAllApps = false
             showMirror = false
+            showManageApps = false
+            soundbarMenu = null
         }
     }
 
@@ -113,8 +122,9 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                             items(state.inputs, key = { "input-" + it.id }) { input ->
                                 ShortcutTile(
                                     label = input.label,
-                                    icon = Icons.Rounded.Cable,
+                                    icon = if (input.id == state.soundbarInputId) Icons.Rounded.Speaker else Icons.Rounded.Cable,
                                     onClick = { launch(viewModel.repository.inputIntent(input)) },
+                                    onLongClick = { soundbarMenu = input },
                                     onFocused = onFocused,
                                     modifier = if (input == state.inputs.first()) {
                                         Modifier.optionalFocusRequester(firstFocus)
@@ -178,17 +188,22 @@ fun HomeScreen(viewModel: LauncherViewModel) {
 
             item(key = "system") {
                 SectionRow("System") {
-                    // Five tiles: a tighter gap so the row fits the screen (a focused tile grows ~21dp each side).
-                    CardRow(verticalPadding = TileFocusPadding, gap = 32.dp) {
+                    // Six narrower tiles with a tighter gap so the row fits the screen (a focused tile grows ~18dp each side).
+                    CardRow(verticalPadding = TileFocusPadding, gap = 24.dp) {
                         items(SystemShortcuts, key = { it.key }) { shortcut ->
                             ShortcutTile(
                                 label = shortcut.label,
                                 icon = shortcut.icon,
                                 onClick = {
                                     val intent = shortcut.intent
-                                    if (intent == null) showMirror = true else launch(intent(context))
+                                    when {
+                                        intent != null -> launch(intent(context))
+                                        shortcut.key == "manage-apps" -> showManageApps = true
+                                        else -> showMirror = true
+                                    }
                                 },
                                 onFocused = onFocused,
+                                width = 120.dp,
                             )
                         }
                     }
@@ -209,6 +224,19 @@ fun HomeScreen(viewModel: LauncherViewModel) {
 
     if (showMirror) {
         MirrorGuideDialog(onDismiss = { showMirror = false })
+    }
+
+    if (showManageApps) {
+        ManageAppsDialog(repository = viewModel.repository, onDismiss = { showManageApps = false })
+    }
+
+    soundbarMenu?.let { input ->
+        SoundbarDialog(
+            input = input,
+            isSoundbar = input.id == state.soundbarInputId,
+            onSet = { yes -> viewModel.setSoundbarInput(if (yes) input.id else SoundbarLink.NONE) },
+            onDismiss = { soundbarMenu = null },
+        )
     }
 
     if (showAllApps) {
@@ -292,18 +320,20 @@ private fun Header(focusedLabel: String) {
                 color = Palette.TextSecondary,
             )
         }
-        Text(
-            text = focusedLabel,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = Palette.TextPrimary,
-            maxLines = 1,
-            modifier = Modifier.padding(bottom = 6.dp),
-        )
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(bottom = 6.dp)) {
+            MemoryUsage(modifier = Modifier.padding(bottom = 8.dp))
+            Text(
+                text = focusedLabel,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Palette.TextPrimary,
+                maxLines = 1,
+            )
+        }
     }
 }
 
-private fun Context.launchSafely(intent: Intent) {
+internal fun Context.launchSafely(intent: Intent) {
     try {
         startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     } catch (_: Exception) {

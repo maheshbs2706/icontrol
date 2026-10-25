@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.CheckBox
 import androidx.compose.material.icons.rounded.CheckBoxOutlineBlank
 import androidx.compose.material.icons.rounded.ImageNotSupported
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.Slideshow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -95,6 +96,8 @@ fun PhotoGridScreen(
     onLoopChange: (Boolean) -> Unit,
     onOpen: (index: Int) -> Unit,
     onSlideshow: (startIndex: Int) -> Unit,
+    /** Starts a slideshow of every photo in a shuffled order. */
+    onRandom: () -> Unit,
 ) {
     var focusedName by remember { mutableStateOf("") }
     // The photo the user was last on, kept while focus is on the side buttons so "From here" knows where "here" is.
@@ -168,14 +171,23 @@ fun PhotoGridScreen(
                         onClick = { onSlideshow(0) },
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .offset(y = 76.dp),
+                            .offset(y = 64.dp),
                     )
-                    LoopCheckbox(
+                    ActionButton(
+                        text = "Random",
+                        icon = Icons.Rounded.Shuffle,
+                        onClick = onRandom,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .offset(y = 128.dp),
+                    )
+                    OptionCheckbox(
+                        text = "Loop",
                         checked = loopSlideshow,
                         onCheckedChange = onLoopChange,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .offset(y = 148.dp),
+                            .offset(y = 190.dp),
                     )
                 }
                 // Padding of half the free height above and below lets even the first and last rows reach the middle.
@@ -242,7 +254,8 @@ fun PhotoCover(file: File) {
 
 /** A focusable check box row: OK toggles it. */
 @Composable
-private fun LoopCheckbox(
+internal fun OptionCheckbox(
+    text: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -253,22 +266,22 @@ private fun LoopCheckbox(
         colors = focusColors(),
         border = focusBorder(),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.2f),
-        modifier = modifier.size(width = 150.dp, height = 56.dp),
+        modifier = modifier.size(width = 158.dp, height = 48.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 14.dp),
         ) {
             Icon(
                 imageVector = if (checked) Icons.Rounded.CheckBox else Icons.Rounded.CheckBoxOutlineBlank,
-                contentDescription = if (checked) "Loop on" else "Loop off",
+                contentDescription = if (checked) "$text on" else "$text off",
                 tint = if (checked) Palette.Accent else Palette.TextSecondary,
-                modifier = Modifier.size(30.dp),
+                modifier = Modifier.size(28.dp),
             )
             Text(
-                text = "Loop",
+                text = text,
                 style = MaterialTheme.typography.titleMedium,
                 color = Palette.TextPrimary,
                 modifier = Modifier.padding(start = 12.dp),

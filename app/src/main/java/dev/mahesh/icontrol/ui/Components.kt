@@ -258,15 +258,18 @@ fun ShortcutTile(
     onClick: () -> Unit,
     onFocused: (String) -> Unit,
     modifier: Modifier = Modifier,
+    width: Dp = 140.dp,
+    onLongClick: (() -> Unit)? = null,
 ) {
     Surface(
         onClick = onClick,
+        onLongClick = onLongClick,
         shape = ClickableSurfaceDefaults.shape(CardShape),
         colors = focusColors(),
         border = focusBorder(),
         scale = ClickableSurfaceDefaults.scale(focusedScale = FocusedScale),
         modifier = modifier
-            .size(width = 140.dp, height = 52.dp)
+            .size(width = width, height = 52.dp)
             .onFocusChanged { if (it.hasFocus) onFocused(label) },
     ) {
         Row(

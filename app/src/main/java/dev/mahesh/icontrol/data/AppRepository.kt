@@ -3,6 +3,7 @@ package dev.mahesh.icontrol.data
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.ResolveInfo
 import android.media.tv.TvContract
 import android.media.tv.TvInputManager
@@ -17,6 +18,14 @@ data class AppEntry(
     val packageName: String,
     val label: String,
     val component: ComponentName,
+)
+
+data class ManagedApp(
+    val packageName: String,
+    val label: String,
+    val isSystem: Boolean,
+    val isEnabled: Boolean,
+    val canUninstall: Boolean,
 )
 
 data class InputEntry(
@@ -50,6 +59,43 @@ class AppRepository(private val context: Context) {
                 )
             }
             .sortedBy { it.label.lowercase() }
+    }
+
+    /**
+     * Apps worth managing: everything with a launcher entry, everything the user installed, and everything switched
+     * off (a disabled app loses its launcher entry, so it would otherwise be impossible to find and re-enable).
+     */
+    @Suppress("DEPRECATION")
+    fun loadManagedApps(): List<ManagedApp> {
+        val launchable = (query(Intent.CATEGORY_LEANBACK_LAUNCHER) + query(Intent.CATEGORY_LAUNCHER))
+            .mapTo(HashSet()) { it.activityInfo.packageName }
+        return pm.getInstalledApplications(0)
+            .filter { it.packageName != context.packageName }
+            .map { info ->
+                val system = info.flags and ApplicationInfo.FLAG_SYSTEM != 0
+                ManagedApp(
+                    packageName = info.packageName,
+                    label = info.loadLabel(pm).toString(),
+                    isSystem = system,
+                    isEnabled = info.enabled,
+                    // A system app can't be removed, but an update installed over it can be rolled back.
+                    canUninstall = !system || info.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP != 0,
+                )
+            }
+            .filter { !it.isEnabled || !it.isSystem || it.packageName in launchable }
+            .sortedBy { it.label.lowercase() }
+    }
+
+    suspend fun managedIcon(packageName: String): ImageBitmap? {
+        icons.get(packageName)?.let { return it }
+        return withContext(Dispatchers.Default) {
+            runCatching {
+                pm.getApplicationIcon(packageName)
+                    .toBitmap(RING_ICON_SIZE, RING_ICON_SIZE)
+                    .asImageBitmap()
+                    .also { icons.put(packageName, it) }
+            }.getOrNull()
+        }
     }
 
     fun loadInputs(): List<InputEntry> {
