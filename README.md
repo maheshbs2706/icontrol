@@ -82,7 +82,18 @@ An HDMI ARC sound bar can drop into standby after a while, and the TV then never
 
 The sound bar's input is the one you mark with a long-press on an input tile (the marked input shows a speaker icon). If you never chose, iControl uses the only input whose name looks like a sound bar (speaker, sound, bar, arc, audio).
 
-An app cannot send HDMI-CEC commands itself (that needs a system-only permission), so tuning to the input is the way this is done.
+Android blocks a launcher from starting an activity while another app is showing, which would leave you on the input screen. To let iControl come back by itself, grant it the overlay permission once (a TV has no screen to do this from):
+
+```powershell
+adb shell appops set dev.mahesh.icontrol SYSTEM_ALERT_WINDOW allow
+```
+
+Without it the reconnect still tunes to the input, but you have to press Home again to return.
+
+Limits:
+
+- An app cannot send HDMI-CEC commands itself (that needs a system-only permission), so tuning to the input is the way this is done.
+- Tuning re-establishes ARC when the bar is on but its link has dropped. It may not wake a bar that is fully in standby; switch the bar on with its own remote.
 
 ## Requirements
 
