@@ -19,8 +19,6 @@ class MainActivity : ComponentActivity() {
                 HomeScreen(viewModel)
             }
         }
-        // A cold start (e.g. after boot) is as good a time as any to check the sound bar.
-        if (savedInstanceState == null) viewModel.reconnectSoundbarIfNeeded()
     }
 
     override fun onNewIntent(intent: Intent) {

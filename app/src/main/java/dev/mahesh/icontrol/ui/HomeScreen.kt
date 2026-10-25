@@ -19,8 +19,8 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Cable
 import androidx.compose.material.icons.rounded.Cast
+import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Speaker
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Usb
 import androidx.compose.material.icons.rounded.VolumeUp
@@ -43,8 +43,6 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import dev.mahesh.icontrol.LauncherViewModel
 import dev.mahesh.icontrol.data.AppEntry
-import dev.mahesh.icontrol.data.InputEntry
-import dev.mahesh.icontrol.data.SoundbarLink
 import dev.mahesh.icontrol.usb.UsbActivity
 import java.time.LocalDate
 import java.time.LocalTime
@@ -67,6 +65,7 @@ private val SystemShortcuts = listOf(
     Shortcut("Wi-Fi", Icons.Rounded.Wifi, "wifi") { Intent(Settings.ACTION_WIFI_SETTINGS) },
     Shortcut("Sound", Icons.Rounded.VolumeUp, "sound") { Intent(Settings.ACTION_SOUND_SETTINGS) },
     Shortcut("Settings", Icons.Rounded.Settings, "settings") { Intent(Settings.ACTION_SETTINGS) },
+    Shortcut("Restart", Icons.Rounded.RestartAlt, "restart", intent = null),
 )
 
 @Composable
@@ -79,7 +78,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
     var showAllApps by remember { mutableStateOf(false) }
     var showMirror by remember { mutableStateOf(false) }
     var showManageApps by remember { mutableStateOf(false) }
-    var soundbarMenu by remember { mutableStateOf<InputEntry?>(null) }
+    var showRestart by remember { mutableStateOf(false) }
     val firstFocus = remember { FocusRequester() }
 
     LaunchedEffect(state.loaded) {
@@ -95,7 +94,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             showAllApps = false
             showMirror = false
             showManageApps = false
-            soundbarMenu = null
+            showRestart = false
         }
     }
 
@@ -122,9 +121,8 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                             items(state.inputs, key = { "input-" + it.id }) { input ->
                                 ShortcutTile(
                                     label = input.label,
-                                    icon = if (input.id == state.soundbarInputId) Icons.Rounded.Speaker else Icons.Rounded.Cable,
+                                    icon = Icons.Rounded.Cable,
                                     onClick = { launch(viewModel.repository.inputIntent(input)) },
-                                    onLongClick = { soundbarMenu = input },
                                     onFocused = onFocused,
                                     modifier = if (input == state.inputs.first()) {
                                         Modifier.optionalFocusRequester(firstFocus)
@@ -188,8 +186,9 @@ fun HomeScreen(viewModel: LauncherViewModel) {
 
             item(key = "system") {
                 SectionRow("System") {
-                    // Six narrower tiles with a tighter gap so the row fits the screen (a focused tile grows ~18dp each side).
-                    CardRow(verticalPadding = TileFocusPadding, gap = 24.dp) {
+                    // Seven narrow tiles with a tight gap so the row fits the screen (a focused tile grows ~16dp each side,
+                    // so it just overlaps its neighbours).
+                    CardRow(verticalPadding = TileFocusPadding, gap = 14.dp) {
                         items(SystemShortcuts, key = { it.key }) { shortcut ->
                             ShortcutTile(
                                 label = shortcut.label,
@@ -199,11 +198,12 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                     when {
                                         intent != null -> launch(intent(context))
                                         shortcut.key == "manage-apps" -> showManageApps = true
+                                        shortcut.key == "restart" -> showRestart = true
                                         else -> showMirror = true
                                     }
                                 },
                                 onFocused = onFocused,
-                                width = 120.dp,
+                                width = 108.dp,
                             )
                         }
                     }
@@ -230,13 +230,8 @@ fun HomeScreen(viewModel: LauncherViewModel) {
         ManageAppsDialog(repository = viewModel.repository, onDismiss = { showManageApps = false })
     }
 
-    soundbarMenu?.let { input ->
-        SoundbarDialog(
-            input = input,
-            isSoundbar = input.id == state.soundbarInputId,
-            onSet = { yes -> viewModel.setSoundbarInput(if (yes) input.id else SoundbarLink.NONE) },
-            onDismiss = { soundbarMenu = null },
-        )
+    if (showRestart) {
+        RestartDialog(onDismiss = { showRestart = false })
     }
 
     if (showAllApps) {

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "launcher")
 
-/** Persists which apps are pinned as favorites, in the order they were added, and which input is the sound bar. */
+/** Persists which apps are pinned as favorites, in the order they were added. */
 class PrefsStore(context: Context) {
 
     private val store = context.applicationContext.dataStore
@@ -28,18 +28,7 @@ class PrefsStore(context: Context) {
         }
     }
 
-    /** The input the user marked as their sound bar ([SoundbarLink.NONE] for "none"), or null if they never chose. */
-    val soundbarInput: Flow<String?> = store.data.map { it[SOUNDBAR_INPUT] }
-
-    suspend fun setSoundbarInput(id: String?) {
-        store.edit { prefs ->
-            if (id == null) prefs.remove(SOUNDBAR_INPUT) else prefs[SOUNDBAR_INPUT] = id
-        }
-    }
-
     private companion object {
         const val SEPARATOR = "|"
-        val FAVORITES = stringPreferencesKey("favorites")
-        val SOUNDBAR_INPUT = stringPreferencesKey("soundbar_input")
-    }
+        val FAVORITES = stringPreferencesKey("favorites")    }
 }

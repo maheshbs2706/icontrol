@@ -19,13 +19,6 @@
     <!-- The "Apps" manager lists every installed app, including disabled ones, so they can be enabled again. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
-    <!--
-      Lets iControl bring itself back to the front after it tunes to the sound bar's input to re-link ARC; Android
-      otherwise blocks a launcher from starting an activity while another app is showing. A TV has no screen to grant
-      it, so: adb shell appops set dev.mahesh.icontrol SYSTEM_ALERT_WINDOW allow
-    -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />

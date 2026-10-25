@@ -29,14 +29,14 @@ The USB screenshot uses synthetic test files, not a real drive. The Wi-Fi name i
 ## Features
 
 - **Home screen:** big, focus-friendly tiles in three rows: Inputs, Favorite apps and System. The TV's memory use is shown at the top right.
-- **Inputs:** HDMI, DTH, the sound bar and other TV inputs, opened in one press. Long-press an input to mark it as the sound bar (see below).
+- **Inputs:** HDMI, DTH, the sound bar and other TV inputs, opened in one press.
 - **Favorite apps:** pick which apps appear on the home row. A per-app menu offers remove, app info and uninstall.
 - **All apps:** a rotating ring of every installed app.
-- **System row:** USB, Mirror, Apps, Wi-Fi, Sound and Settings.
+- **System row:** USB, Mirror, Apps, Wi-Fi, Sound, Settings and Restart.
 - **Apps manager:** every app on the TV in one list, with the actions that apply to each (see below).
 - **USB:** browse photos, videos and all files on a USB drive, with photo and video counts. Photos and videos each have a grid with Play all / Slideshow controls: **From here**, **From start**, **Random** and **Loop** (see below).
 - **Mirror:** asks Android phone, iPhone or laptop, then guides the user through mirroring (see below).
-- **Sound bar reconnect:** brings an HDMI ARC sound bar back when the link has dropped (see below).
+- **Restart:** restarts the TV after a confirmation (see below).
 - **Home button:** pressing Home from any app, including the mirror receiver, closes any open dialog and shows the landing page.
 
 ## Mirror
@@ -72,28 +72,16 @@ The photo and video grids use the same layout: rows of thumbnails, with the focu
 
 Opening a single photo or video still shows or plays just that one (a video repeats if Loop is on).
 
-## Sound bar reconnect
+## Restart
 
-An HDMI ARC sound bar can drop into standby after a while, and the TV then never brings the ARC link back (restarting the TV does). iControl works around this without any system permission:
+The **Restart** tile asks "Restart the TV?" and, on confirmation, restarts it. This is useful for things a restart fixes, such as an HDMI sound bar whose ARC link has dropped.
 
-- On a Home press, and when iControl starts, it checks whether the TV is sending audio out over ARC.
-- If it is not, it tunes to the sound bar's HDMI input. That makes the TV wake the bar and set ARC up again. It waits for ARC to come back (up to 10 seconds) and returns to the launcher.
-- It tries at most once every 2 minutes, so a bar that is switched off on purpose does not pull the screen away on every Home press.
+Android does not let an ordinary app restart the device: the system restart screen needs the `SHUTDOWN` permission, which only system apps get. So iControl connects to the TV's own ADB service on `127.0.0.1:5555`, the way `adb connect` does from a PC, and runs `reboot` as the shell user. This needs:
 
-The sound bar's input is the one you mark with a long-press on an input tile (the marked input shows a speaker icon). If you never chose, iControl uses the only input whose name looks like a sound bar (speaker, sound, bar, arc, audio).
+- **ADB over network** (or USB debugging) switched on in Developer options.
+- A one-time **"Allow USB debugging?"** prompt on the TV the first time. Tick **Always allow**.
 
-Android blocks a launcher from starting an activity while another app is showing, which would leave you on the input screen. To let iControl come back by itself, grant it the overlay permission once (a TV has no screen to do this from):
-
-```powershell
-adb shell appops set dev.mahesh.icontrol SYSTEM_ALERT_WINDOW allow
-```
-
-Without it the reconnect still tunes to the input, but you have to press Home again to return.
-
-Limits:
-
-- An app cannot send HDMI-CEC commands itself (that needs a system-only permission), so tuning to the input is the way this is done.
-- Tuning re-establishes ARC when the bar is on but its link has dropped. It may not wake a bar that is fully in standby; switch the bar on with its own remote.
+iControl keeps its own ADB key in its private storage (`adbkey`, `adbkey.pub`), which is what the TV remembers. If the TV does not answer, the dialog says so instead of failing silently. The ADB client is the [dadb](https://github.com/mobile-dev-inc/dadb) library.
 
 ## Requirements
 
@@ -146,9 +134,9 @@ The system FallbackHome acts as a safety net if iControl fails to start.
 
 ```
 app/src/main/java/dev/mahesh/icontrol/
-  MainActivity.kt, LauncherViewModel.kt   entry point, state, sound bar reconnect
-  data/                                   app list, preferences, sound bar link check
-  ui/                                     home screen, dialogs (all apps, apps manager, mirror guide, sound bar), theme
+  MainActivity.kt, LauncherViewModel.kt   entry point and state
+  data/                                   app list, preferences, TV restart over ADB
+  ui/                                     home screen, dialogs (all apps, apps manager, mirror guide, restart), theme
   usb/                                    USB browser (files, photos, videos, slideshow and playback)
 docs/screenshots/                         images used in this README
 ```
@@ -159,4 +147,4 @@ iControl is released under the [MIT License](LICENSE).
 
 It does not include or modify any AirPlay receiver code. The AirPlay receiver (AirPlayMirror Lite by NeoYantra) is a separate app that you install yourself, and it has its own terms. App names and logos shown in screenshots (Netflix, JioHotstar, Zee5, Prime Video, YouTube and others) belong to their owners.
 
-Libraries used: AndroidX, Jetpack Compose, Compose for TV, Media3 and Coil, all under the Apache License 2.0.
+Libraries used: AndroidX, Jetpack Compose, Compose for TV, Media3, Coil and dadb, all under the Apache License 2.0.
