@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -129,6 +131,7 @@ fun CardRow(
      */
     pinnedItemWidth: Dp? = null,
     gap: Dp = CardGap,
+    state: LazyListState = rememberLazyListState(),
     content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit,
 ) {
     val horizontalPadding = if (pinnedItemWidth != null) {
@@ -138,6 +141,7 @@ fun CardRow(
     }
     CompositionLocalProvider(LocalBringIntoViewSpec provides CenterFocusSpec) {
         LazyRow(
+            state = state,
             contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = verticalPadding),
             horizontalArrangement = if (pinnedItemWidth != null) {
                 Arrangement.spacedBy(gap)

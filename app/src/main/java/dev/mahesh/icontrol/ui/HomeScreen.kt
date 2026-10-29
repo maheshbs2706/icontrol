@@ -7,13 +7,12 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apps
@@ -33,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -70,16 +70,29 @@ private val SystemShortcuts = listOf(
 fun HomeScreen(viewModel: LauncherViewModel) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val hasInputs = state.inputs.isNotEmpty()
     var focusedLabel by remember { mutableStateOf("") }
     var menuApp by remember { mutableStateOf<AppEntry?>(null) }
     var showPicker by remember { mutableStateOf(false) }
     var showAllApps by remember { mutableStateOf(false) }
     var showMirror by remember { mutableStateOf(false) }
     var showManageApps by remember { mutableStateOf(false) }
-    val firstFocus = remember { FocusRequester() }
+    // First tile of the apps row: the first favorite, or "Add app" while there are none.
+    val favoriteFocus = remember { FocusRequester() }
+    val favoritesState = rememberLazyListState()
+
+    // The row can be scrolled away from its first tile (favorites that load late are inserted off-screen to the
+    // left), so bring it back first; the tile may also take a moment to be laid out, hence the retries.
+    suspend fun focusFirstFavorite() {
+        favoritesState.scrollToItem(0)
+        repeat(10) {
+            if (runCatching { favoriteFocus.requestFocus() }.getOrDefault(false)) return
+            delay(100)
+        }
+    }
 
     LaunchedEffect(state.loaded) {
-        if (state.loaded) runCatching { firstFocus.requestFocus() }
+        if (state.loaded) focusFirstFavorite()
     }
 
     // Home closes every dialog (the mirror guide is left open behind the receiver app, for one).
@@ -91,116 +104,108 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             showAllApps = false
             showMirror = false
             showManageApps = false
+            // Let the dialogs leave composition first, so focus doesn't return to whatever opened them.
+            delay(150)
+            focusFirstFavorite()
         }
     }
 
     val launch: (Intent) -> Unit = { intent -> context.launchSafely(intent) }
     val onFocused: (String) -> Unit = { focusedLabel = it }
-    val hasInputs = state.inputs.isNotEmpty()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .backdrop()
-            .padding(top = 20.dp),
+            .padding(top = 12.dp),
     ) {
         Header(focusedLabel = focusedLabel)
 
-        LazyColumn(
-            contentPadding = PaddingValues(bottom = 12.dp),
-            modifier = Modifier.fillMaxSize(),
-        ) {
+        // A plain column rather than a list: the page is sized to fit, so moving between rows never scrolls it.
+        Column(modifier = Modifier.fillMaxSize()) {
             if (hasInputs) {
-                item(key = "inputs") {
-                    SectionRow("Inputs") {
-                        CardRow(verticalPadding = TileFocusPadding, gap = 24.dp) {
-                            items(state.inputs, key = { "input-" + it.id }) { input ->
-                                ShortcutTile(
-                                    label = input.label,
-                                    icon = Icons.Rounded.Cable,
-                                    onClick = { launch(viewModel.repository.inputIntent(input)) },
-                                    onFocused = onFocused,
-                                    width = 200.dp,
-                                    modifier = if (input == state.inputs.first()) {
-                                        Modifier.optionalFocusRequester(firstFocus)
-                                    } else Modifier,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            item(key = "favorites") {
-                SectionRow("Favorite apps") {
-                    CardRow(
-                        verticalPadding = FavoriteFocusPadding,
-                        pinnedItemWidth = FavoriteCardWidth,
-                        gap = FavoriteGap,
-                    ) {
-                        items(state.favorites, key = { "fav-" + it.packageName }) { app ->
-                            AppCard(
-                                app = app,
-                                width = FavoriteCardWidth,
-                                loadImage = viewModel::image,
-                                onClick = { launch(viewModel.repository.launchIntent(app)) },
-                                onLongClick = { menuApp = app },
-                                onFocused = onFocused,
-                                focusedScale = FavoriteFocusedScale,
-                                modifier = if (!hasInputs && app == state.favorites.first()) {
-                                    Modifier.optionalFocusRequester(firstFocus)
-                                } else Modifier,
-                            )
-                        }
-                        item(key = "add-favorite") {
-                            ActionTile(
-                                icon = Icons.Rounded.Add,
-                                label = "Add app",
-                                focusedLabel = "Add a favorite app",
-                                width = FavoriteCardWidth,
-                                onClick = { showPicker = true },
-                                onFocused = onFocused,
-                                focusedScale = FavoriteFocusedScale,
-                                modifier = if (!hasInputs && state.favorites.isEmpty()) {
-                                    Modifier.optionalFocusRequester(firstFocus)
-                                } else Modifier,
-                            )
-                        }
-                        item(key = "all-apps") {
-                            ActionTile(
-                                icon = Icons.Rounded.Apps,
-                                label = "All apps",
-                                focusedLabel = "All apps",
-                                width = FavoriteCardWidth,
-                                onClick = { showAllApps = true },
-                                onFocused = onFocused,
-                                focusedScale = FavoriteFocusedScale,
-                            )
-                        }
-                    }
-                }
-            }
-
-            item(key = "system") {
-                SectionRow("System") {
-                    // Six narrower tiles with a tighter gap so the row fits the screen (a focused tile grows ~18dp each side).
-                    CardRow(verticalPadding = TileFocusPadding, gap = 14.dp) {
-                        items(SystemShortcuts, key = { it.key }) { shortcut ->
+                SectionRow("Inputs") {
+                    CardRow(verticalPadding = TileFocusPadding, gap = 24.dp) {
+                        items(state.inputs, key = { "input-" + it.id }) { input ->
                             ShortcutTile(
-                                label = shortcut.label,
-                                icon = shortcut.icon,
-                                onClick = {
-                                    val intent = shortcut.intent
-                                    when {
-                                        intent != null -> launch(intent(context))
-                                        shortcut.key == "manage-apps" -> showManageApps = true
-                                        else -> showMirror = true
-                                    }
-                                },
+                                label = input.label,
+                                icon = Icons.Rounded.Cable,
+                                onClick = { launch(viewModel.repository.inputIntent(input)) },
                                 onFocused = onFocused,
-                                width = 132.dp,
+                                width = 200.dp,
                             )
                         }
+                    }
+                }
+            }
+
+            SectionRow("Favorite apps") {
+                CardRow(
+                    state = favoritesState,
+                    verticalPadding = FavoriteFocusPadding,
+                    pinnedItemWidth = FavoriteCardWidth,
+                    gap = FavoriteGap,
+                ) {
+                    items(state.favorites, key = { "fav-" + it.packageName }) { app ->
+                        AppCard(
+                            app = app,
+                            width = FavoriteCardWidth,
+                            loadImage = viewModel::image,
+                            onClick = { launch(viewModel.repository.launchIntent(app)) },
+                            onLongClick = { menuApp = app },
+                            onFocused = onFocused,
+                            focusedScale = FavoriteFocusedScale,
+                            modifier = if (app == state.favorites.first()) {
+                                Modifier.focusRequester(favoriteFocus)
+                            } else Modifier,
+                        )
+                    }
+                    item(key = "add-favorite") {
+                        ActionTile(
+                            icon = Icons.Rounded.Add,
+                            label = "Add app",
+                            focusedLabel = "Add a favorite app",
+                            width = FavoriteCardWidth,
+                            onClick = { showPicker = true },
+                            onFocused = onFocused,
+                            focusedScale = FavoriteFocusedScale,
+                            modifier = if (state.favorites.isEmpty()) {
+                                Modifier.focusRequester(favoriteFocus)
+                            } else Modifier,
+                        )
+                    }
+                    item(key = "all-apps") {
+                        ActionTile(
+                            icon = Icons.Rounded.Apps,
+                            label = "All apps",
+                            focusedLabel = "All apps",
+                            width = FavoriteCardWidth,
+                            onClick = { showAllApps = true },
+                            onFocused = onFocused,
+                            focusedScale = FavoriteFocusedScale,
+                        )
+                    }
+                }
+            }
+
+            SectionRow("System") {
+                // Six narrower tiles with a tighter gap so the row fits the screen (a focused tile grows ~18dp each side).
+                CardRow(verticalPadding = TileFocusPadding, gap = 14.dp) {
+                    items(SystemShortcuts, key = { it.key }) { shortcut ->
+                        ShortcutTile(
+                            label = shortcut.label,
+                            icon = shortcut.icon,
+                            onClick = {
+                                val intent = shortcut.intent
+                                when {
+                                    intent != null -> launch(intent(context))
+                                    shortcut.key == "manage-apps" -> showManageApps = true
+                                    else -> showMirror = true
+                                }
+                            },
+                            onFocused = onFocused,
+                            width = 132.dp,
+                        )
                     }
                 }
             }
