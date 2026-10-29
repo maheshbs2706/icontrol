@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-feature
         android:name="android.software.leanback"
@@ -9,6 +10,10 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- Only adb can grant this. It lets the slideshow switch the TV's screensaver, which this TV has no Settings screen for. -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!-- Only for the slideshow's picture folder: adding pictures from USB and removing them. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

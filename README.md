@@ -30,8 +30,9 @@ The **Slideshow** tile, at the end of the Favorite apps row, opens the settings.
 - **Home background:** on or off. The pictures cross-fade slowly behind the home screen. Each picture is shown whole, never cropped, and a strongly blurred copy of it fills the margins when it is not 16:9. It is off until you turn it on.
 - **Picture visibility:** how much of the picture shows through behind the home screen, from 50% to 100% in steps of 10 (90% by default). The rest is a dark layer; at 100% nothing darkens it. The clock, date, memory text and section titles carry a soft shadow so they stay readable on a bright picture.
 - **Change every:** steps through 5, 10, 20, 30 and 60 seconds (10 by default).
-- **Screensaver:** Android TV has no lock screen, so the screensaver is what shows when the TV is idle. iControl provides one, which plays the same pictures full screen, each shown whole with a blurred copy filling the margins. The button opens Settings, Device Preferences, Screensaver, where you choose it. Or set it over adb:
-  `adb shell settings put secure screensaver_components dev.mahesh.icontrol/dev.mahesh.icontrol.SlideshowDream`
+- **Screensaver:** Android TV has no lock screen, so the screensaver is what shows when the TV is idle. iControl provides one, which plays the same pictures full screen, each shown whole with a blurred copy filling the margins. Choose "iControl slideshow" in the TV's own Settings (on the OnePlus TV it is under **Personalize, Screensaver**; other TVs often have it under Device Preferences). The button shows whether it is on. If you allow the app once from a computer, the button switches it on and off directly, and puts the previous screensaver back when you turn it off:
+  `adb shell pm grant dev.mahesh.icontrol android.permission.WRITE_SECURE_SETTINGS`
+  Without that, the button opens Settings. You can also set it over adb: `adb shell settings put secure screensaver_components dev.mahesh.icontrol/dev.mahesh.icontrol.SlideshowDream`
 
 ### Managing the pictures
 

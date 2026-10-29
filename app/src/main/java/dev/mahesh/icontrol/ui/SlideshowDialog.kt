@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -55,8 +56,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import dev.mahesh.icontrol.SlideshowDream
 import dev.mahesh.icontrol.SlideshowState
+import dev.mahesh.icontrol.data.Screensaver
 import dev.mahesh.icontrol.data.SlideshowPhotos
 import coil3.compose.AsyncImage
 import dev.mahesh.icontrol.usb.ActionButton
@@ -83,8 +84,8 @@ fun SlideshowDialog(
         if (!state.canRead) askForStorage.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
     }
     // Looked up again on return, so the button flips once the user has chosen iControl in Settings.
-    var screensaverOn by remember { mutableStateOf(isScreensaver(context)) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { screensaverOn = isScreensaver(context) }
+    var screensaverOn by remember { mutableStateOf(Screensaver.isOn(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { screensaverOn = Screensaver.isOn(context) }
 
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
@@ -153,9 +154,28 @@ fun SlideshowDialog(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     ActionButton(
-                        text = if (screensaverOn) "Screensaver: On" else "Use as screensaver",
+                        text = if (screensaverOn) "Screensaver: On" else "Screensaver: Off",
                         icon = Icons.Rounded.Slideshow,
-                        onClick = { openScreensaverSettings(context) },
+                        onClick = {
+                            when {
+                                // Switch it here when the app has been allowed to (see the README); otherwise point to the TV's own screen.
+                                Screensaver.canChange(context) -> {
+                                    if (Screensaver.set(context, !screensaverOn)) {
+                                        screensaverOn = Screensaver.isOn(context)
+                                    } else {
+                                        Toast.makeText(context, "Couldn't change the screensaver", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                                else -> {
+                                    Toast.makeText(
+                                        context,
+                                        "Choose it in Settings, Personalize, Screensaver",
+                                        Toast.LENGTH_LONG,
+                                    ).show()
+                                    openScreensaverSettings(context)
+                                }
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                     )
                     ActionButton(text = "Close", icon = Icons.Rounded.Close, onClick = onDismiss, modifier = Modifier.fillMaxWidth())
@@ -266,10 +286,6 @@ private fun SlideshowPreview(state: SlideshowState, modifier: Modifier = Modifie
         }
     }
 }
-
-private fun isScreensaver(context: Context): Boolean =
-    Settings.Secure.getString(context.contentResolver, "screensaver_components")
-        ?.contains(SlideshowDream::class.java.name) == true
 
 /** The screensaver chooser if this TV has one, otherwise the main Settings screen. */
 private fun openScreensaverSettings(context: Context) {
