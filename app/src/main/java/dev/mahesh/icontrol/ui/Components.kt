@@ -95,7 +95,7 @@ fun SectionRow(
             SectionRule(Modifier.weight(1f), toEnd = true)
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(shadow = TextShadow),
                 color = Palette.SectionTitle,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(horizontal = 16.dp),

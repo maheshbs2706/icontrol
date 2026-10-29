@@ -18,58 +18,31 @@ Built for a OnePlus TV (Android 11, 1080p), but it should work on any Android TV
 | --- |
 | ![USB menu](docs/screenshots/usb-menu.png) |
 
-### Mirror
+### Slideshow
 
-| Choose what to mirror | Laptop guide | iPhone guide |
-| --- | --- | --- |
-| ![Choose what to mirror](docs/screenshots/mirror-choice.png) | ![Laptop guide](docs/screenshots/mirror-laptop.png) | ![iPhone guide](docs/screenshots/mirror-iphone.png) |
+Your own pictures can cross-fade behind the home screen and play as the TV's screensaver. The pictures are the photos sitting directly in `Pictures/iControl` on the TV's own storage. Android TV has no file picker, so a fixed folder is how pictures get in: add them from a USB drive inside the app (below), or copy them yourself, for example with `adb push photo.jpg /sdcard/Pictures/iControl/`. Pictures in sub-folders are ignored, and at most 300 are used.
 
-The USB screenshot uses synthetic test files, not a real drive. The Wi-Fi name is not shown in the mirror screenshots because they were taken without the location permission, so the guides use their generic wording ("the same Wi-Fi as this TV"). On the TV the guides show the real network name.
+The **Slideshow** tile, at the end of the Favorite apps row, opens the settings. All the options are equal-width buttons in a column on the left. On the right is a live preview of the slideshow: the picture as it will look behind the home screen, with its name and position, following the visibility and interval you choose. Under the preview is a row of thumbnails of every picture. Move onto one to see it in the preview, and move away to let it cycle again.
 
-## Features
+### Options
 
-- **Home screen:** big, focus-friendly tiles in three rows: Inputs, Favorite apps and System. The TV's memory use is shown at the top right.
-- **Inputs:** HDMI, DTH, the sound bar and other TV inputs, opened in one press.
-- **Favorite apps:** pick which apps appear on the home row. A per-app menu offers remove, app info and uninstall.
-- **All apps:** a rotating ring of every installed app.
-- **System row:** USB, Mirror, Apps, Wi-Fi, Sound and Settings.
-- **Apps manager:** every app on the TV in one list, with the actions that apply to each (see below).
-- **USB:** browse photos, videos and all files on a USB drive, with photo and video counts. Photos and videos each have a grid with Play all / Slideshow controls: **From here**, **From start**, **Random** and **Loop** (see below).
-- **Mirror:** asks Android phone, iPhone or laptop, then guides the user through mirroring (see below).
-- **Home button:** pressing Home from any app, including the mirror receiver, closes any open dialog and shows the landing page.
+- **Pictures (N):** opens the pictures screen (below).
+- **Home background:** on or off. The pictures cross-fade slowly behind the home screen. Each picture is shown whole, never cropped, and a strongly blurred copy of it fills the margins when it is not 16:9. It is off until you turn it on.
+- **Picture visibility:** how much of the picture shows through behind the home screen, from 50% to 100% in steps of 10 (90% by default). The rest is a dark layer; at 100% nothing darkens it. The clock, date, memory text and section titles carry a soft shadow so they stay readable on a bright picture.
+- **Change every:** steps through 5, 10, 20, 30 and 60 seconds (10 by default).
+- **Screensaver:** Android TV has no lock screen, so the screensaver is what shows when the TV is idle. iControl provides one, which plays the same pictures full screen, each shown whole with a blurred copy filling the margins. The button opens Settings, Device Preferences, Screensaver, where you choose it. Or set it over adb:
+  `adb shell settings put secure screensaver_components dev.mahesh.icontrol/dev.mahesh.icontrol.SlideshowDream`
 
-## Mirror
+### Managing the pictures
 
-The Mirror tile first asks what you want to show on the TV, using three equal cards.
+The pictures screen shows every picture as a thumbnail (five across), with the buttons in a column on the left.
 
-- **Android phone:** uses the TV's built-in Google Cast receiver. The guide shows the TV's name and the Wi-Fi network, and says where to tap on the phone (Cast, Smart View or Screen mirroring).
-- **iPhone:** iPhone mirroring uses AirPlay, which Android TV does not include, so the TV needs a free AirPlay receiver app. iControl does not contain a receiver itself. It opens the receiver and walks through the iPhone's side: connect to the same Wi-Fi, open the receiver, then Control Center, Screen Mirroring, and choose the TV.
-- **Laptop:** uses the same Google Cast receiver, through Chrome's Cast (Save, share and cast, then Cast, then Cast screen). This works on Windows, Mac and Chromebook. The guide also mentions an HDMI cable as a no-delay alternative.
-- **Receiver not installed (iPhone):** the guide shows a **Get it on Google Play** button that opens the receiver's Play Store page, plus a hint to search for it by name if there is no Play Store. When you return after installing, the button changes to **Open AirPlay receiver**.
+- **Remove one:** press OK on a picture. It asks first, and only the copy on the TV is deleted.
+- **Select:** multi-select. Press OK on each picture to tick it (or **Choose all**), then **Remove N**. **Done** leaves the mode, and so does Back.
+- **Remove all:** deletes every picture after one confirmation, which shows the pictures about to go.
+- **From USB:** adds pictures from the plugged-in USB drive. A spinner shows while the drive is scanned. The drive's folders appear three across, each with a cover picture, its photo count and how many you have chosen. Press OK on a folder to open it, then OK on each photo you want (or **Choose all** for the folder). Your choices are kept as you move between folders, and **Folders** or Back returns to the list. **Add N** stays disabled until at least one photo is chosen. It copies every chosen photo into the slideshow folder, with a spinner while it works. A photo that is already there is skipped, and one with the same name but different content gets a numbered name, so nothing is overwritten. **Cancel** leaves without adding.
 
-The supported receiver is **AirPlayMirror Lite** (`com.neoyantra.airplaymirror.airplaymirrorappdemo`). To support another receiver, add its package name to `AirPlayReceivers` in `ui/MirrorGuideDialog.kt`.
-
-Protected video, such as Netflix, usually shows black over AirPlay.
-
-## Apps manager
-
-The **Apps** tile lists every app with a launcher entry, every app you installed, and every disabled app (a disabled app loses its launcher entry, so it is listed so it can be enabled again). Each row shows only the actions that apply:
-
-- **Disable** for system apps that are on, **Enable** for disabled apps. Android only lets the system change another app's enabled state, so these open the app's settings page, where you press the real button.
-- **Uninstall** for apps you installed, and for system apps that have an update installed (this rolls the update back). A plain system app cannot be uninstalled.
-
-The list is rebuilt when you come back from one of those screens.
-
-## USB photos and videos
-
-The photo and video grids use the same layout: rows of thumbnails, with the focused row kept at the vertical middle, level with the fixed buttons on the left.
-
-- **From here:** plays from the first item of the row beside the button.
-- **From start:** plays from the first item.
-- **Random:** starts straight away with every item in a shuffled order.
-- **Loop:** a checkbox; the list starts over after the last item. It is on by default for photos and off for videos.
-
-Opening a single photo or video still shows or plays just that one (a video repeats if Loop is on).
+The first time, iControl asks to read, and for adding and removing pictures to change, files on the TV. The USB browser needs the read permission too.
 
 ## Requirements
 
@@ -116,15 +89,17 @@ The system FallbackHome acts as a safety net if iControl fails to start.
 - The Wi-Fi name in the mirror guide needs location permission (Android requires it to read the network name). Without it, the guide says "the same Wi-Fi as this TV" instead.
 - The Apps manager needs the `QUERY_ALL_PACKAGES` permission to list disabled apps and apps without a launcher entry.
 - The TV's memory use comes from `ActivityManager`. There is no CPU figure: Android 11 stops apps reading `/proc/stat`.
-- Do not commit screenshots of the USB drive's photos or videos, or of the Wi-Fi name.
+- The slideshow adds and removes pictures in `Pictures/iControl`, which needs `WRITE_EXTERNAL_STORAGE`. Modifier.blur needs Android 12 and the target TV runs 11, so the blurred margins are made by shrinking the picture to a few pixels and stretching it back.
+- Do not commit screenshots of the USB drive's photos or videos, of your own pictures, or of the Wi-Fi name. The slideshow screenshots use generated pictures.
 
 ## Project layout
 
 ```
 app/src/main/java/dev/mahesh/icontrol/
   MainActivity.kt, LauncherViewModel.kt   entry point and state
-  data/                                   app list and preferences
-  ui/                                     home screen, dialogs (all apps, apps manager, mirror guide), theme
+  SlideshowDream.kt                       the screensaver (a DreamService)
+  data/                                   app list, preferences, slideshow picture folder
+  ui/                                     home screen, dialogs (all apps, apps manager, mirror guide, slideshow), theme
   usb/                                    USB browser (files, photos, videos, slideshow and playback)
 docs/screenshots/                         images used in this README
 ```

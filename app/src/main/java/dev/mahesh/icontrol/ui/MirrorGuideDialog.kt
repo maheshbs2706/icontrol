@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -124,6 +125,9 @@ fun MirrorGuideDialog(onDismiss: () -> Unit) {
         }
     }
 }
+
+/** The buttons side by side under the iPhone guide are the same width. */
+private val GuideButtonWidth = 290.dp
 
 private enum class PhoneKind { Android, IPhone, Laptop }
 
@@ -327,17 +331,17 @@ private fun IPhoneGuide(wifiName: String?, onBack: () -> Unit, firstFocus: Focus
                 text = "Open AirPlay receiver",
                 icon = Icons.Rounded.PlayArrow,
                 onClick = { runCatching { context.startActivity(launch) } },
-                modifier = Modifier.focusRequester(firstFocus),
+                modifier = Modifier.width(GuideButtonWidth).focusRequester(firstFocus),
             )
         } else {
             ActionButton(
                 text = "Get it on Google Play",
                 icon = Icons.Rounded.Download,
                 onClick = { openReceiverInStore(context) },
-                modifier = Modifier.focusRequester(firstFocus),
+                modifier = Modifier.width(GuideButtonWidth).focusRequester(firstFocus),
             )
         }
-        ActionButton(text = "Back", icon = Icons.Rounded.Close, onClick = onBack)
+        ActionButton(text = "Back", icon = Icons.Rounded.Close, onClick = onBack, modifier = Modifier.width(GuideButtonWidth))
     }
     if (launch == null) {
         Text(

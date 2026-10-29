@@ -157,6 +157,7 @@ fun VideoGridScreen(
                         // The row's first video: the row beside the button is the one the user means.
                         onClick = { onPlayAll(lastFocusedIndex / VideoColumns * VideoColumns) },
                         modifier = Modifier
+                            .width(RailButtonWidth)
                             .align(Alignment.CenterStart)
                             .focusRequester(firstFocus),
                     )
@@ -165,6 +166,7 @@ fun VideoGridScreen(
                         icon = Icons.Rounded.PlaylistPlay,
                         onClick = { onPlayAll(0) },
                         modifier = Modifier
+                            .width(RailButtonWidth)
                             .align(Alignment.CenterStart)
                             .offset(y = 64.dp),
                     )
@@ -173,6 +175,7 @@ fun VideoGridScreen(
                         icon = Icons.Rounded.Shuffle,
                         onClick = onRandom,
                         modifier = Modifier
+                            .width(RailButtonWidth)
                             .align(Alignment.CenterStart)
                             .offset(y = 128.dp),
                     )

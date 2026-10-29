@@ -28,6 +28,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import dev.mahesh.icontrol.ui.CenterFocusSpec
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckBox
@@ -64,6 +65,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -162,6 +164,7 @@ fun PhotoGridScreen(
                         // The row's first photo: the row beside the button is the one the user means.
                         onClick = { onSlideshow(lastFocusedIndex / PhotoColumns * PhotoColumns) },
                         modifier = Modifier
+                            .width(RailButtonWidth)
                             .align(Alignment.CenterStart)
                             .focusRequester(firstFocus),
                     )
@@ -170,6 +173,7 @@ fun PhotoGridScreen(
                         icon = Icons.Rounded.Slideshow,
                         onClick = { onSlideshow(0) },
                         modifier = Modifier
+                            .width(RailButtonWidth)
                             .align(Alignment.CenterStart)
                             .offset(y = 64.dp),
                     )
@@ -178,6 +182,7 @@ fun PhotoGridScreen(
                         icon = Icons.Rounded.Shuffle,
                         onClick = onRandom,
                         modifier = Modifier
+                            .width(RailButtonWidth)
                             .align(Alignment.CenterStart)
                             .offset(y = 128.dp),
                     )
@@ -290,6 +295,8 @@ internal fun OptionCheckbox(
     }
 }
 
+private val ThumbnailShape = RoundedCornerShape(12.dp)
+
 @Composable
 fun ThumbnailCard(
     width: Dp,
@@ -300,9 +307,12 @@ fun ThumbnailCard(
 ) {
     Surface(
         onClick = onClick,
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+        shape = ClickableSurfaceDefaults.shape(ThumbnailShape),
         colors = focusColors(),
-        border = focusBorder(),
+        // The border must have the picture's own corner radius, or the picture's corners poke out past the highlight.
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(border = BorderStroke(3.dp, Palette.Glow), shape = ThumbnailShape),
+        ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = FocusedScale),
         modifier = modifier
             .size(width = width, height = width * 9 / 16)

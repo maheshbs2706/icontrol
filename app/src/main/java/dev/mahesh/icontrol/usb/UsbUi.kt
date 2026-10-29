@@ -103,6 +103,12 @@ fun ScreenHeader(title: String, subtitle: String? = null, focusedName: String = 
 
 /** Width of the fixed left panel that holds a grid screen's main action (Slideshow, Play all). */
 val SideRailWidth = ScreenPadding + 170.dp
+
+/**
+ * Every button in a side rail has this width, so they line up with each other and with the 158dp check box. It fits the
+ * longest label ("Remove all") and, once the focused button has grown 20%, still stops short of the grid beside it.
+ */
+val RailButtonWidth = 158.dp
 private val RailGridStartPadding = 12.dp
 
 /**
@@ -138,9 +144,12 @@ fun ActionButton(
     icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /** A disabled button is dimmed and cannot take focus. */
+    enabled: Boolean = true,
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         scale = ButtonDefaults.scale(focusedScale = 1.2f),
         modifier = modifier,
     ) {

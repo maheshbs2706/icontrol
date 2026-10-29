@@ -10,6 +10,8 @@
 
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- Only for the slideshow's picture folder: adding pictures from USB and removing them. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!-- Only to show the Wi-Fi network's name in the "Mirror phone" guide; Android requires location access for that. -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -60,5 +62,18 @@
             android:label="USB"
             android:screenOrientation="landscape"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|uiMode|density" />
+
+        <!-- The TV's screensaver (a "dream"): plays the pictures in Pictures/iControl while the TV is idle. -->
+        <service
+            android:name=".SlideshowDream"
+            android:exported="true"
+            android:label="iControl slideshow"
+            android:icon="@drawable/ic_launcher"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

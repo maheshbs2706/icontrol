@@ -33,10 +33,10 @@ fun MemoryUsage(modifier: Modifier = Modifier) {
     }
     percent?.let {
         Row(modifier = modifier) {
-            Text(text = "Memory", style = MaterialTheme.typography.titleSmall, color = Palette.SectionTitle)
+            Text(text = "Memory", style = MaterialTheme.typography.titleSmall.copy(shadow = TextShadow), color = Palette.SectionTitle)
             Text(
                 text = "$it%",
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmall.copy(shadow = TextShadow),
                 color = Palette.Accent,
                 modifier = Modifier.padding(start = 8.dp),
             )

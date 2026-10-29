@@ -13,6 +13,10 @@ import dev.mahesh.icontrol.data.AppImage
 import dev.mahesh.icontrol.data.AppRepository
 import dev.mahesh.icontrol.data.InputEntry
 import dev.mahesh.icontrol.data.PrefsStore
+import dev.mahesh.icontrol.data.SlideshowPhotos
+import dev.mahesh.icontrol.data.SlideshowSettings
+import dev.mahesh.icontrol.usb.UsbStorage
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,6 +33,13 @@ data class HomeState(
     val allApps: List<AppEntry> = emptyList(),
     val inputs: List<InputEntry> = emptyList(),
     val favoritePackages: Set<String> = emptySet(),
+)
+
+data class SlideshowState(
+    val settings: SlideshowSettings = SlideshowSettings(),
+    val photos: List<File> = emptyList(),
+    /** False until the user allows storage access, which is the usual reason the folder looks empty. */
+    val canRead: Boolean = true,
 )
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
@@ -52,6 +63,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             favoritePackages = favs.toSet(),
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeState())
+
+    private val photos = MutableStateFlow<List<File>>(emptyList())
+
+    val slideshow: StateFlow<SlideshowState> = combine(prefs.slideshow, photos) { settings, files ->
+        SlideshowState(settings, files, UsbStorage.canRead(application))
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, SlideshowState())
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -90,6 +107,26 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             inputs.value = inputList
             loaded.value = true
         }
+        refreshPhotos()
+    }
+
+    /** Re-reads the slideshow folder; also called once storage access has just been granted. */
+    fun refreshPhotos() {
+        viewModelScope.launch {
+            photos.value = withContext(Dispatchers.IO) { SlideshowPhotos.list(getApplication()) }
+        }
+    }
+
+    fun setSlideshowHome(enabled: Boolean) {
+        viewModelScope.launch { prefs.setSlideshowHome(enabled) }
+    }
+
+    fun cycleSlideshowSeconds() {
+        viewModelScope.launch { prefs.cycleSlideshowSeconds() }
+    }
+
+    fun cycleSlideshowVisibility() {
+        viewModelScope.launch { prefs.cycleSlideshowVisibility() }
     }
 
     suspend fun image(app: AppEntry): AppImage? = repository.image(app)

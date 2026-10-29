@@ -8,12 +8,16 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.darkColorScheme
 
 /** Horizontal safe area so content stays clear of TV overscan. */
 val ScreenPadding = 56.dp
+
+/** A soft dark halo for text that sits straight on a slideshow picture (invisible on the plain dark backdrop). */
+val TextShadow = Shadow(color = Color(0xCC000000), offset = Offset(0f, 2f), blurRadius = 8f)
 
 object Palette {
     val Background = Color(0xFF060A1C)
