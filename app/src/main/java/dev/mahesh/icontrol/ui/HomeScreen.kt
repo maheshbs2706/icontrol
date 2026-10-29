@@ -113,13 +113,14 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             if (hasInputs) {
                 item(key = "inputs") {
                     SectionRow("Inputs") {
-                        CardRow(verticalPadding = TileFocusPadding) {
+                        CardRow(verticalPadding = TileFocusPadding, gap = 24.dp) {
                             items(state.inputs, key = { "input-" + it.id }) { input ->
                                 ShortcutTile(
                                     label = input.label,
                                     icon = Icons.Rounded.Cable,
                                     onClick = { launch(viewModel.repository.inputIntent(input)) },
                                     onFocused = onFocused,
+                                    width = 200.dp,
                                     modifier = if (input == state.inputs.first()) {
                                         Modifier.optionalFocusRequester(firstFocus)
                                     } else Modifier,
@@ -183,7 +184,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             item(key = "system") {
                 SectionRow("System") {
                     // Six narrower tiles with a tighter gap so the row fits the screen (a focused tile grows ~18dp each side).
-                    CardRow(verticalPadding = TileFocusPadding, gap = 24.dp) {
+                    CardRow(verticalPadding = TileFocusPadding, gap = 14.dp) {
                         items(SystemShortcuts, key = { it.key }) { shortcut ->
                             ShortcutTile(
                                 label = shortcut.label,
@@ -197,7 +198,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                     }
                                 },
                                 onFocused = onFocused,
-                                width = 120.dp,
+                                width = 132.dp,
                             )
                         }
                     }
@@ -261,7 +262,7 @@ private val FavoriteGap = 56.dp
 
 // Room each row needs above/below so a focused card isn't clipped by the lazy list: 15% of its height, rounded up.
 // Tiles are 52dp tall; favorite cards are about 129dp tall.
-private val TileFocusPadding = 10.dp
+private val TileFocusPadding = 12.dp
 private val FavoriteFocusPadding = 24.dp
 
 @Composable
@@ -295,14 +296,14 @@ private fun Header(focusedLabel: String) {
                 Text(
                     text = meridiem,
                     style = MaterialTheme.typography.titleLarge,
-                    color = Palette.TextSecondary,
+                    color = Palette.SectionTitle,
                     modifier = Modifier.padding(start = 8.dp, bottom = 12.dp),
                 )
             }
             Text(
                 text = date,
                 style = MaterialTheme.typography.titleMedium,
-                color = Palette.TextSecondary,
+                color = Palette.SectionTitle,
             )
         }
         Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(bottom = 6.dp)) {

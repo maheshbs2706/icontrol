@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -45,7 +46,7 @@ import androidx.tv.material3.Text
 import dev.mahesh.icontrol.data.AppEntry
 import dev.mahesh.icontrol.data.AppImage
 
-private val CardShape = RoundedCornerShape(14.dp)
+private val CardShape = RoundedCornerShape(20.dp)
 
 /** The focused item is 30% larger than the rest so it is unmistakable from across the room. */
 const val FocusedScale = 1.3f
@@ -62,9 +63,14 @@ internal fun focusColors() = ClickableSurfaceDefaults.colors(
 @Composable
 internal fun focusBorder() = ClickableSurfaceDefaults.border(
     focusedBorder = androidx.tv.material3.Border(
-        border = BorderStroke(3.dp, Palette.Accent),
+        border = BorderStroke(3.dp, Palette.Glow),
         shape = CardShape,
     ),
+)
+
+@Composable
+internal fun focusGlow() = ClickableSurfaceDefaults.glow(
+    focusedGlow = androidx.tv.material3.Glow(elevationColor = Palette.Glow.copy(alpha = 0.6f), elevation = 18.dp),
 )
 
 @Composable
@@ -77,15 +83,36 @@ fun SectionRow(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxWidth(),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = Palette.TextSecondary,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = ScreenPadding)
+                .padding(top = 6.dp, bottom = 8.dp),
+        ) {
+            SectionRule(Modifier.weight(1f), toEnd = true)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = Palette.SectionTitle,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+            SectionRule(Modifier.weight(1f), toEnd = false)
+        }
         content()
     }
+}
+
+/** Hairline that fades out away from the section title. */
+@Composable
+private fun SectionRule(modifier: Modifier, toEnd: Boolean) {
+    val line = Palette.SectionTitle.copy(alpha = 0.45f)
+    Box(
+        modifier = modifier
+            .height(1.dp)
+            .background(Brush.horizontalGradient(if (toEnd) listOf(Color.Transparent, line) else listOf(line, Color.Transparent))),
+    )
 }
 
 /**
@@ -143,6 +170,7 @@ fun AppCard(
         shape = ClickableSurfaceDefaults.shape(CardShape),
         colors = focusColors(),
         border = focusBorder(),
+        glow = focusGlow(),
         scale = ClickableSurfaceDefaults.scale(focusedScale = focusedScale),
         modifier = modifier
             .size(width = width, height = width * 9 / 16)
@@ -182,6 +210,7 @@ fun ActionTile(
         shape = ClickableSurfaceDefaults.shape(CardShape),
         colors = focusColors(),
         border = focusBorder(),
+        glow = focusGlow(),
         scale = ClickableSurfaceDefaults.scale(focusedScale = focusedScale),
         modifier = modifier
             .size(width = width, height = width * 9 / 16)
@@ -259,28 +288,30 @@ fun ShortcutTile(
     onFocused: (String) -> Unit,
     modifier: Modifier = Modifier,
     width: Dp = 140.dp,
+    focusedScale: Float = 1.08f,
 ) {
     Surface(
         onClick = onClick,
         shape = ClickableSurfaceDefaults.shape(CardShape),
         colors = focusColors(),
         border = focusBorder(),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = FocusedScale),
+        glow = focusGlow(),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = focusedScale),
         modifier = modifier
-            .size(width = width, height = 52.dp)
+            .size(width = width, height = 60.dp)
             .onFocusChanged { if (it.hasFocus) onFocused(label) },
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 16.dp),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = Palette.Accent,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(28.dp),
             )
             Text(
                 text = label,
@@ -290,7 +321,7 @@ fun ShortcutTile(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp),
+                    .padding(start = 12.dp),
             )
         }
     }
