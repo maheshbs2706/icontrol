@@ -132,7 +132,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                 icon = Icons.Rounded.Cable,
                                 onClick = { launch(viewModel.repository.inputIntent(input)) },
                                 onFocused = onFocused,
-                                width = 200.dp,
+                                width = 190.dp,
                             )
                         }
                     }
