@@ -54,6 +54,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -285,7 +287,19 @@ fun VideoThumbnail(file: File) {
 @Composable
 fun VideoPlayerScreen(videos: List<File>, startIndex: Int, loop: Boolean, onFinished: () -> Unit) {
     val context = LocalContext.current
-    val player = remember { ExoPlayer.Builder(context).build() }
+    // handleAudioFocus = true: playing a video takes audio focus, so a music app left running in the background
+    // (Gaana, Spotify) pauses instead of playing underneath. Photos do not use this player, so music carries on there.
+    val player = remember {
+        ExoPlayer.Builder(context)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .build(),
+                true,
+            )
+            .build()
+    }
     KeepScreenOn()
 
     DisposableEffect(player) {
