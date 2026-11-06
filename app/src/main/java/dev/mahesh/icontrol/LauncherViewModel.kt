@@ -70,6 +70,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         SlideshowState(settings, files, UsbStorage.canRead(application))
     }.stateIn(viewModelScope, SharingStarted.Eagerly, SlideshowState())
 
+    val keepSoundbarAwake: StateFlow<Boolean> =
+        prefs.keepSoundbarAwake.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun setKeepSoundbarAwake(enabled: Boolean) {
+        viewModelScope.launch { prefs.setKeepSoundbarAwake(enabled) }
+    }
+
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             intent.data?.schemeSpecificPart?.let(repository::evict)

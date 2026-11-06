@@ -13,13 +13,16 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import dev.mahesh.icontrol.audio.KeepAwakeAudio
 import dev.mahesh.icontrol.data.PrefsStore
 import dev.mahesh.icontrol.data.SlideshowPhotos
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -50,6 +53,18 @@ class SlideshowDream : DreamService() {
         val job = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         scope = job
         job.launch { play(root) }
+        // The screensaver is the idle case a soundbar would otherwise sleep in.
+        job.launch {
+            PrefsStore(applicationContext).keepSoundbarAwake.collectLatest { enabled ->
+                if (!enabled) return@collectLatest
+                KeepAwakeAudio.acquire()
+                try {
+                    awaitCancellation()
+                } finally {
+                    KeepAwakeAudio.release()
+                }
+            }
+        }
     }
 
     override fun onDreamingStopped() {

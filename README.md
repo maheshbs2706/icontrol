@@ -93,12 +93,17 @@ The system FallbackHome acts as a safety net if iControl fails to start.
 - The slideshow adds and removes pictures in `Pictures/iControl`, which needs `WRITE_EXTERNAL_STORAGE`. Modifier.blur needs Android 12 and the target TV runs 11, so the blurred margins are made by shrinking the picture to a few pixels and stretching it back.
 - Do not commit screenshots of the USB drive's photos or videos, of your own pictures, or of the Wi-Fi name. The slideshow screenshots use generated pictures.
 
+### Keeping a soundbar awake
+
+A soundbar on HDMI ARC goes to standby after a few minutes of silence. ARC then drops, and when you next play something the TV does not wake the soundbar, so the sound comes out of the TV speakers. The **Soundbar awake** tile (Favorite apps row, off by default) plays an inaudible 20 kHz tone at about -50 dBFS while the home screen or the screensaver is showing, so the soundbar keeps seeing a signal. It takes no audio focus and stops as soon as another app is in front. It only helps while the soundbar is awake: if it is already asleep, wake it with its own remote first. Whether a given soundbar counts the tone as a signal depends on the model; if it still sleeps, change `AMPLITUDE` or `TONE_HZ` in `audio/KeepAwakeAudio.kt`.
+
 ## Project layout
 
 ```
 app/src/main/java/dev/mahesh/icontrol/
   MainActivity.kt, LauncherViewModel.kt   entry point and state
   SlideshowDream.kt                       the screensaver (a DreamService)
+  audio/                                  KeepAwakeAudio, the inaudible tone for the soundbar
   data/                                   app list, preferences, slideshow picture folder
   ui/                                     home screen, dialogs (all apps, apps manager, mirror guide, slideshow), theme
   usb/                                    USB browser (files, photos, videos, slideshow and playback)

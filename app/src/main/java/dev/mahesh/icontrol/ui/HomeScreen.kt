@@ -73,6 +73,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val slideshow by viewModel.slideshow.collectAsStateWithLifecycle()
+    val keepSoundbarAwake by viewModel.keepSoundbarAwake.collectAsStateWithLifecycle()
     val hasInputs = state.inputs.isNotEmpty()
     var focusedLabel by remember { mutableStateOf("") }
     var menuApp by remember { mutableStateOf<AppEntry?>(null) }
@@ -205,6 +206,17 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                 focusedLabel = "Slideshow",
                                 width = FavoriteCardWidth,
                                 onClick = { showSlideshow = true },
+                                onFocused = onFocused,
+                                focusedScale = FavoriteFocusedScale,
+                            )
+                        }
+                        item(key = "soundbar") {
+                            ActionTile(
+                                icon = Icons.Rounded.VolumeUp,
+                                label = "Soundbar awake: ${if (keepSoundbarAwake) "On" else "Off"}",
+                                focusedLabel = "Keep the soundbar awake while idle",
+                                width = FavoriteCardWidth,
+                                onClick = { viewModel.setKeepSoundbarAwake(!keepSoundbarAwake) },
                                 onFocused = onFocused,
                                 focusedScale = FavoriteFocusedScale,
                             )

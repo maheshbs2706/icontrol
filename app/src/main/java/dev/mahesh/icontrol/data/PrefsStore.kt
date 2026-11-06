@@ -67,11 +67,19 @@ class PrefsStore(context: Context) {
         }
     }
 
+    /** Whether iControl plays an inaudible tone on the home screen and screensaver to stop a soundbar sleeping. */
+    val keepSoundbarAwake: Flow<Boolean> = store.data.map { it[KEEP_SOUNDBAR_AWAKE] ?: false }
+
+    suspend fun setKeepSoundbarAwake(enabled: Boolean) {
+        store.edit { it[KEEP_SOUNDBAR_AWAKE] = enabled }
+    }
+
     private companion object {
         const val SEPARATOR = "|"
         val FAVORITES = stringPreferencesKey("favorites")
         val SLIDESHOW_HOME = booleanPreferencesKey("slideshow_home")
         val SLIDESHOW_SECONDS = intPreferencesKey("slideshow_seconds")
         val SLIDESHOW_VISIBILITY = intPreferencesKey("slideshow_visibility")
+        val KEEP_SOUNDBAR_AWAKE = booleanPreferencesKey("keep_soundbar_awake")
     }
 }
