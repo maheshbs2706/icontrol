@@ -74,8 +74,18 @@ class PrefsStore(context: Context) {
         store.edit { it[KEEP_SOUNDBAR_AWAKE] = enabled }
     }
 
+    /** The saved router admin password, or null when none is saved (or it can no longer be decrypted). */
+    val routerPassword: Flow<String?> = store.data.map { prefs -> prefs[ROUTER_PASSWORD]?.let(SecretBox::open) }
+
+    suspend fun setRouterPassword(password: String?) {
+        store.edit { prefs ->
+            if (password == null) prefs.remove(ROUTER_PASSWORD) else prefs[ROUTER_PASSWORD] = SecretBox.seal(password)
+        }
+    }
+
     private companion object {
         const val SEPARATOR = "|"
+        val ROUTER_PASSWORD = stringPreferencesKey("router_password")
         val FAVORITES = stringPreferencesKey("favorites")
         val SLIDESHOW_HOME = booleanPreferencesKey("slideshow_home")
         val SLIDESHOW_SECONDS = intPreferencesKey("slideshow_seconds")

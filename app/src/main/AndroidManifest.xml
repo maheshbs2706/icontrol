@@ -10,6 +10,9 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- "Wi-Fi devices" signs in to the router over the local network to list and block devices. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Only adb can grant this. It lets the slideshow switch the TV's screensaver, which this TV has no Settings screen for. -->
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
@@ -43,6 +46,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.IControl">
 
         <activity

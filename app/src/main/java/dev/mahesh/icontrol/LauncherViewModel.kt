@@ -47,6 +47,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val repository = AppRepository(application)
     private val prefs = PrefsStore(application)
 
+    /** The "Wi-Fi devices" screen: who is on the network, and blocking them at the router. */
+    val wifiDevices = WifiDevicesController(application, prefs, viewModelScope)
+
     private val installed = MutableStateFlow<List<AppEntry>>(emptyList())
     private val inputs = MutableStateFlow<List<InputEntry>>(emptyList())
     private val loaded = MutableStateFlow(false)

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Cable
 import androidx.compose.material.icons.rounded.Cast
+import androidx.compose.material.icons.rounded.Router
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Slideshow
 import androidx.compose.material.icons.rounded.Tune
@@ -82,6 +83,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
     var showMirror by remember { mutableStateOf(false) }
     var showManageApps by remember { mutableStateOf(false) }
     var showSlideshow by remember { mutableStateOf(false) }
+    var showWifiDevices by remember { mutableStateOf(false) }
     // First tile of the apps row: the first favorite, or "Add app" while there are none.
     val favoriteFocus = remember { FocusRequester() }
     val favoritesState = rememberLazyListState()
@@ -110,6 +112,7 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             showMirror = false
             showManageApps = false
             showSlideshow = false
+            showWifiDevices = false
             // Let the dialogs leave composition first, so focus doesn't return to whatever opened them.
             delay(150)
             focusFirstFavorite()
@@ -210,6 +213,17 @@ fun HomeScreen(viewModel: LauncherViewModel) {
                                 focusedScale = FavoriteFocusedScale,
                             )
                         }
+                        item(key = "wifi-devices") {
+                            ActionTile(
+                                icon = Icons.Rounded.Router,
+                                label = "Wi-Fi devices",
+                                focusedLabel = "Block devices from the internet",
+                                width = FavoriteCardWidth,
+                                onClick = { showWifiDevices = true },
+                                onFocused = onFocused,
+                                focusedScale = FavoriteFocusedScale,
+                            )
+                        }
                         item(key = "soundbar") {
                             ActionTile(
                                 icon = Icons.Rounded.VolumeUp,
@@ -272,6 +286,10 @@ fun HomeScreen(viewModel: LauncherViewModel) {
             onStorageAllowed = viewModel::refreshPhotos,
             onDismiss = { showSlideshow = false },
         )
+    }
+
+    if (showWifiDevices) {
+        WifiDevicesDialog(controller = viewModel.wifiDevices, onDismiss = { showWifiDevices = false })
     }
 
     if (showManageApps) {

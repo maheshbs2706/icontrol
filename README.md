@@ -97,6 +97,16 @@ The system FallbackHome acts as a safety net if iControl fails to start.
 
 A soundbar on HDMI ARC goes to standby after a few minutes of silence. ARC then drops, and when you next play something the TV does not wake the soundbar, so the sound comes out of the TV speakers. The **Soundbar awake** tile (Favorite apps row, off by default) plays an inaudible 20 kHz tone at about -50 dBFS while the home screen or the screensaver is showing, so the soundbar keeps seeing a signal. It takes no audio focus and stops as soon as another app is in front. It only helps while the soundbar is awake: if it is already asleep, wake it with its own remote first. Whether a given soundbar counts the tone as a signal depends on the model; if it still sleeps, change `AMPLITUDE` or `TONE_HZ` in `audio/KeepAwakeAudio.kt`.
 
+### Blocking devices from the internet
+
+The **Wi-Fi devices** tile (Favorite apps row) lists everything connected to the Wi-Fi, with a **Block internet** / **Allow internet** button for each. The TV cannot cut other devices off by itself, so it signs in to the router and does what the router's own Access Control page does: it adds a Drop rule for the device's MAC address to the block list, and deletes the rule to allow it again. The router is found from the TV's default gateway, and the sign-in is always `admin` plus the password you type.
+
+- The first time, the screen asks for the router's admin password. **Save password** keeps it on the TV, encrypted with a key in the Android Keystore; **Forget password** removes it. A wrong password clears the saved one.
+- The first block switches the router's Access Control on, in block-list mode. If the router is set to allow-list mode the app refuses and says so, because switching modes would cut off everything not on the list.
+- Only the TV itself is protected from being blocked here. The router allows one admin session at a time, so using this screen signs you out of the router's web page, and the other way round.
+- Written for a TP-Link Archer C5 (the encrypted "cgi_gdpr" web UI) and tested on one. Other TP-Link models with the same UI may work; others will not. The protocol is in `data/RouterApi.kt`.
+- Blocking is by MAC address, so a phone using a randomised ("private") Wi-Fi address can dodge a block by changing it.
+
 ## Project layout
 
 ```
@@ -104,8 +114,9 @@ app/src/main/java/dev/mahesh/icontrol/
   MainActivity.kt, LauncherViewModel.kt   entry point and state
   SlideshowDream.kt                       the screensaver (a DreamService)
   audio/                                  KeepAwakeAudio, the inaudible tone for the soundbar
-  data/                                   app list, preferences, slideshow picture folder
-  ui/                                     home screen, dialogs (all apps, apps manager, mirror guide, slideshow), theme
+  WifiDevicesController.kt                state and actions behind the Wi-Fi devices screen
+  data/                                   app list, preferences, slideshow picture folder, router client (RouterApi), SecretBox
+  ui/                                     home screen, dialogs (all apps, apps manager, mirror guide, slideshow, Wi-Fi devices), theme
   usb/                                    USB browser (files, photos, videos, slideshow and playback)
 docs/screenshots/                         images used in this README
 ```
