@@ -10,8 +10,10 @@ import java.net.Inet4Address
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -35,6 +37,19 @@ class WifiDevicesController(
 ) {
     private val _state = MutableStateFlow(WifiDevicesState())
     val state: StateFlow<WifiDevicesState> = _state
+
+    /** Names the user gave devices, by MAC address; they win over whatever the router calls a device. */
+    val names: StateFlow<Map<String, String>> = prefs.deviceNames.stateIn(scope, SharingStarted.Eagerly, emptyMap())
+
+    /** What this TV calls itself, for the row that is this TV (the router often has no name for it). */
+    val selfName: String =
+        android.provider.Settings.Global.getString(context.contentResolver, "device_name")?.takeIf { it.isNotBlank() }
+            ?: android.os.Build.MODEL
+
+    /** Gives [mac] the name [name]; a blank name goes back to the router's own. */
+    fun rename(mac: String, name: String) {
+        scope.launch { prefs.setDeviceName(mac, name) }
+    }
 
     /** The password in use this time: the saved one, or one typed for this visit only. */
     private var password: String? = null

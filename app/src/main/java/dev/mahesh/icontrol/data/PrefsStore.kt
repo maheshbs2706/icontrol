@@ -83,8 +83,26 @@ class PrefsStore(context: Context) {
         }
     }
 
+    /** Names the user gave to devices on the Wi-Fi, keyed by upper-case MAC address. */
+    val deviceNames: Flow<Map<String, String>> = store.data.map { prefs ->
+        prefs[DEVICE_NAMES].orEmpty().lines().mapNotNull { line ->
+            val cut = line.indexOf('=')
+            if (cut <= 0) null else line.substring(0, cut) to line.substring(cut + 1)
+        }.toMap()
+    }
+
+    /** Saves [name] for [mac]; a blank name removes it so the router's own name shows again. */
+    suspend fun setDeviceName(mac: String, name: String) {
+        store.edit { prefs ->
+            val current = prefs[DEVICE_NAMES].orEmpty().lines().filter { it.isNotEmpty() && !it.startsWith("$mac=") }
+            val clean = name.replace('\n', ' ').trim()
+            prefs[DEVICE_NAMES] = (if (clean.isEmpty()) current else current + "$mac=$clean").joinToString("\n")
+        }
+    }
+
     private companion object {
         const val SEPARATOR = "|"
+        val DEVICE_NAMES = stringPreferencesKey("device_names")
         val ROUTER_PASSWORD = stringPreferencesKey("router_password")
         val FAVORITES = stringPreferencesKey("favorites")
         val SLIDESHOW_HOME = booleanPreferencesKey("slideshow_home")
